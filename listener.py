@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 import paho.mqtt.client as paho
 import time
 import alsaaudio
@@ -40,7 +42,7 @@ def on_message(client, userdata, message):
 #    print("log: ",buf)
 
 
-tmpClient = paho.Client("control1")
+tmpClient = paho.Client("tmp_"+siteId)
 tmpClient.on_message=on_message
 #tmpClient.on_connect=on_connect
 #tmpClient.on_log=on_log

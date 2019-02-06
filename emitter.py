@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 import paho.mqtt.client as mqtt #import the client1
 import time
 import json
