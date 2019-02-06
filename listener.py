@@ -34,7 +34,7 @@ def on_sat_volume(volume):
         volume = 98
     elif volume == 10:
         volume = 100
-        
+
     mixer = alsaaudio.Mixer("PCM")
     mixer.setvolume(volume)
 
@@ -56,14 +56,14 @@ def on_message(client, userdata, message):
 #def on_connect(a,b,c,f):
 #    print("connected")
 
-def on_log(client, userdata, level, buf):
-    print("log: ",buf)
+#def on_log(client, userdata, level, buf):
+#    print("log: ",buf)
 
 
 tmpClient = paho.Client("tmp_"+siteId)
 tmpClient.on_message=on_message
 #tmpClient.on_connect=on_connect
-tmpClient.on_log=on_log
+#tmpClient.on_log=on_log
 tmpClient.connect(MQTT_IP_ADDR, MQTT_PORT)
 tmpClient.subscribe("sat/volume")
 tmpClient.loop_forever()
