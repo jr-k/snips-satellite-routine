@@ -12,14 +12,31 @@ MQTT_PORT = 1883
 def on_sat_volume(volume):
     print("volume " + str(volume))
 
-    if volume < 0:
+    if volume == 0:
         volume = 0
-
-    if volume > 10:
-        volume = 10
-
+    elif volume == 1:
+        volume = 44
+    elif volume == 2:
+        volume = 60
+    elif volume == 3:
+        volume = 71
+    elif volume == 4:
+        volume = 78
+    elif volume == 5:
+        volume = 85
+    elif volume == 6:
+        volume = 88
+    elif volume == 7:
+        volume = 91
+    elif volume == 8:
+        volume = 95
+    elif volume == 9:
+        volume = 98
+    elif volume == 10:
+        volume = 100
+        
     mixer = alsaaudio.Mixer("PCM")
-    mixer.setvolume(volumes(str(volume)))
+    mixer.setvolume(volume)
 
 def on_message(client, userdata, message):
     topic = message.topic
