@@ -22,7 +22,7 @@ client.loop_start() #start the loop
 print("Publishing message to topic","sat/volume")
 
 payload = {
-    "volume": 10,
+    "volume": 3,
     "siteId": "pi3sat1"
 }
 
