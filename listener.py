@@ -5,6 +5,8 @@ import time
 import alsaaudio
 import json
 
+time.sleep(10)
+
 siteId = "pi3sat1"
 MQTT_IP_ADDR = "192.168.9.170"
 MQTT_PORT = 1883
