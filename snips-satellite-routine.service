@@ -1,7 +1,7 @@
 [Unit]
 Description=Snips Satellite Routine
 Wants=network-online.target mosquitto.service snips-audio-server.service snips-hotword.service
-After=network-online.target mosquitto.service snips-audio-server.service snips-hotword.service
+After=network.target mosquitto.service snips-audio-server.service snips-hotword.service
 
 [Service]
 ExecStart=/usr/bin/python /home/pi/snips/snips-satellite-routine/listener.py
