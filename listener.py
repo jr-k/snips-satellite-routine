@@ -72,6 +72,13 @@ def on_sat_volume(volume):
 instance = None
 player = None
 
+def on_hotword():
+    if player != None:
+        vol = player.audio_get_volume()
+        player.audio_set_volume(30)
+        time.sleep(4)
+        player.audio_set_volume(vol)
+
 def on_media_play(media, port):
     global instance, player
     instance = vlc.Instance('--no-video', '-A alsa,none-alsa-audio-device default')
@@ -81,6 +88,7 @@ def on_media_play(media, port):
     media = instance.media_new(resource)
     player.set_media(media)
     player.play()
+    player.audio_set_volume(100)
 
 def on_stop():
     global player
@@ -102,10 +110,12 @@ def on_message(client, userdata, message):
 
     if topic == "hermes/artifice/volume/set":
         on_sat_volume(volume=msgJson["volume"])
-    if topic == "hermes/artifice/media/audio/play":
+    elif topic == "hermes/artifice/media/audio/play":
         on_media_play(media=msgJson["media"], port=msgJson["port"])
-    if topic == "hermes/artifice/stop":
-	on_stop()
+    elif topic == "hermes/artifice/stop":
+        on_stop()
+    elif topic == "hermes/hotword/default/detected":
+        on_hotword()
 
 def on_connect(client, userdata, flag, rc):
     print("connected")
@@ -120,9 +130,10 @@ def on_log(client, userdata, level, buf):
 loadConfigs()
 tmpClient = paho.Client("tmp_"+siteId)
 tmpClient.on_message=on_message
-tmpClient.on_connect=on_connect
-tmpClient.on_log=on_log
+# tmpClient.on_connect=on_connect
+# tmpClient.on_log=on_log
 tmpClient.connect(mqttServer, mqttPort)
+tmpClient.subscribe("hermes/hotword/default/detected")
 tmpClient.subscribe("hermes/artifice/volume/set")
 tmpClient.subscribe("hermes/artifice/media/audio/play")
 tmpClient.subscribe("hermes/artifice/stop")
