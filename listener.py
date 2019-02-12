@@ -6,6 +6,7 @@ import alsaaudio
 import json
 import pytoml
 import os
+import vlc
 
 #time.sleep(1)
 
@@ -67,6 +68,15 @@ def on_sat_volume(volume):
     mixer = alsaaudio.Mixer("PCM")
     mixer.setvolume(volume)
 
+def on_media_play(media, port):
+    instance = vlc.Instance('--no-video', '-A alsa,none-alsa-audio-device default')
+    player = instance.media_player_new()
+    resource = 'http://'+mqttServer+':'+str(port)+'/'+media
+    print "Trying to play resource : " + resource
+    media = instance.media_new(resource)
+    player.set_media(media)
+    player.play()
+
 def on_message(client, userdata, message):
     topic = message.topic
     msg=str(message.payload.decode("utf-8","ignore"))
@@ -81,6 +91,8 @@ def on_message(client, userdata, message):
 
     if topic == "hermes/volume/set":
         on_sat_volume(volume=msgJson["volume"])
+    if topic == "hermes/media/audio/play":
+        on_media_play(media=msgJson["media"], port=msgJson["port"])
 
 def on_connect(client, userdata, flag, rc):
     print("connected")
@@ -99,4 +111,5 @@ tmpClient.on_connect=on_connect
 tmpClient.on_log=on_log
 tmpClient.connect(mqttServer, mqttPort)
 tmpClient.subscribe("hermes/volume/set")
+tmpClient.subscribe("hermes/media/audio/play")
 tmpClient.loop_forever()
