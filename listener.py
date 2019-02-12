@@ -7,6 +7,7 @@ import json
 import pytoml
 import os
 import vlc
+import sys
 
 #time.sleep(1)
 
@@ -68,32 +69,48 @@ def on_sat_volume(volume):
     mixer = alsaaudio.Mixer("PCM")
     mixer.setvolume(volume)
 
-
 instance = None
 player = None
 
-def on_hotword():
-    if player != None:
-        vol = player.audio_get_volume()
-        player.audio_set_volume(30)
-        time.sleep(4)
-        player.audio_set_volume(vol)
+def on_hotword_on():
+    print "[on_hotword_on]"
 
-def on_media_play(media, port):
+    if player != None:
+        player.audio_set_volume(50)
+        print "lower volume"
+
+def on_hotword_off():
+    print "[on_hotword_off]"
+
+    if player != None:
+        player.audio_set_volume(100)
+        print "upper volume"
+
+def on_media_play(resourceName, port):
+    print "[on_media_play]"
     global instance, player
-    instance = vlc.Instance('--no-video', '-A alsa,none-alsa-audio-device default')
-    player = instance.media_player_new()
-    resource = 'http://'+mqttServer+':'+str(port)+'/'+media
-    print "Trying to play resource : " + resource
-    media = instance.media_new(resource)
+
+    if instance == None or player == None:
+        print "new player"
+        instance = vlc.Instance('--no-video', '-A alsa,none-alsa-audio-device default')
+        player = instance.media_player_new()
+    else:
+        print "update player"
+        player.stop()
+
+    resourceUrl = 'http://'+mqttServer+':'+str(port)+'/'+resourceName
+    print "Trying to play resource : " + resourceUrl
+    media = instance.media_new(resourceUrl)
     player.set_media(media)
     player.play()
     player.audio_set_volume(100)
 
 def on_stop():
+    print "[on_stop]"
     global player
 
     if player != None:
+        print "Stop music"
         player.stop()
 
 def on_message(client, userdata, message):
@@ -111,29 +128,32 @@ def on_message(client, userdata, message):
     if topic == "hermes/artifice/volume/set":
         on_sat_volume(volume=msgJson["volume"])
     elif topic == "hermes/artifice/media/audio/play":
-        on_media_play(media=msgJson["media"], port=msgJson["port"])
+        on_media_play(resourceName=msgJson["media"], port=msgJson["port"])
     elif topic == "hermes/artifice/stop":
         on_stop()
     elif topic == "hermes/hotword/default/detected":
-        on_hotword()
+        on_hotword_on()
+    elif topic == "hermes/asr/stopListening" and msgJson["sessionId"] == None:
+        on_hotword_off()
 
-def on_connect(client, userdata, flag, rc):
-    print("connected")
-    print(rc)
-
-def on_disconnected(client, userdata, rc):
-    print("disconnected")
-
-def on_log(client, userdata, level, buf):
-    print("log: ",buf)
+# def on_connect(client, userdata, flag, rc):
+#     print("connected")
+#     print(rc)
+#
+# def on_disconnected(client, userdata, rc):
+#     print("disconnected")
+#
+# def on_log(client, userdata, level, buf):
+#     print("log: ",buf)
 
 loadConfigs()
-tmpClient = paho.Client("tmp_"+siteId)
+tmpClient = paho.Client("snips-satellite-routine-" + str(int(round(time.time() * 1000))))
 tmpClient.on_message=on_message
 # tmpClient.on_connect=on_connect
 # tmpClient.on_log=on_log
 tmpClient.connect(mqttServer, mqttPort)
 tmpClient.subscribe("hermes/hotword/default/detected")
+tmpClient.subscribe("hermes/asr/stopListening")
 tmpClient.subscribe("hermes/artifice/volume/set")
 tmpClient.subscribe("hermes/artifice/media/audio/play")
 tmpClient.subscribe("hermes/artifice/stop")
