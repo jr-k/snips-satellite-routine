@@ -68,7 +68,12 @@ def on_sat_volume(volume):
     mixer = alsaaudio.Mixer("PCM")
     mixer.setvolume(volume)
 
+
+instance = None
+player = None
+
 def on_media_play(media, port):
+    global instance, player
     instance = vlc.Instance('--no-video', '-A alsa,none-alsa-audio-device default')
     player = instance.media_player_new()
     resource = 'http://'+mqttServer+':'+str(port)+'/'+media
@@ -76,6 +81,12 @@ def on_media_play(media, port):
     media = instance.media_new(resource)
     player.set_media(media)
     player.play()
+
+def on_stop():
+    global player
+
+    if player != None:
+        player.stop()
 
 def on_message(client, userdata, message):
     topic = message.topic
@@ -89,10 +100,12 @@ def on_message(client, userdata, message):
     print "[Topic]: " + str(topic)
     print "[Payload]: " + msg
 
-    if topic == "hermes/volume/set":
+    if topic == "hermes/artifice/volume/set":
         on_sat_volume(volume=msgJson["volume"])
-    if topic == "hermes/media/audio/play":
+    if topic == "hermes/artifice/media/audio/play":
         on_media_play(media=msgJson["media"], port=msgJson["port"])
+    if topic == "hermes/artifice/stop":
+	on_stop()
 
 def on_connect(client, userdata, flag, rc):
     print("connected")
@@ -110,6 +123,7 @@ tmpClient.on_message=on_message
 tmpClient.on_connect=on_connect
 tmpClient.on_log=on_log
 tmpClient.connect(mqttServer, mqttPort)
-tmpClient.subscribe("hermes/volume/set")
-tmpClient.subscribe("hermes/media/audio/play")
+tmpClient.subscribe("hermes/artifice/volume/set")
+tmpClient.subscribe("hermes/artifice/media/audio/play")
+tmpClient.subscribe("hermes/artifice/stop")
 tmpClient.loop_forever()
