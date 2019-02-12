@@ -4,7 +4,7 @@ Wants=network-online.target mosquitto.service snips-audio-server.service snips-h
 After=network.target mosquitto.service snips-audio-server.service snips-hotword.service
 
 [Service]
-ExecStart=/usr/bin/python /home/pi/snips/snips-satellite-routine/listener.py
+ExecStart=/usr/bin/python -u /home/pi/snips/snips-satellite-routine/listener.py
 WorkingDirectory=/home/pi
 Restart=no
 
