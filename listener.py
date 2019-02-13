@@ -41,7 +41,7 @@ def loadConfigs():
 		print('Snips configs not found')
 
 def on_sat_volume(volume):
-    print("volume " + str(volume))
+    print("[on_sat_volume] volume " + str(volume))
 
     if volume == 0:
         volume = 0
@@ -76,41 +76,43 @@ def on_hotword_on():
     print "[on_hotword_on]"
 
     if player != None:
-        player.audio_set_volume(50)
-        print "lower volume"
+        player.audio_set_volume(30)
+        print "[on_hotword_on] lower volume"
 
 def on_hotword_off():
     print "[on_hotword_off]"
 
     if player != None:
         player.audio_set_volume(100)
-        print "upper volume"
+        print "[on_hotword_off] upper volume"
 
 def on_media_play(resourceName, port):
     print "[on_media_play]"
     global instance, player
 
     if instance == None or player == None:
-        print "new player"
+        print "[on_media_play] new player"
         instance = vlc.Instance('--no-video', '-A alsa,none-alsa-audio-device default')
         player = instance.media_player_new()
     else:
-        print "update player"
+        print "[on_media_play] update player"
         player.stop()
 
     resourceUrl = 'http://'+mqttServer+':'+str(port)+'/'+resourceName
-    print "Trying to play resource : " + resourceUrl
+    print "[on_media_play] Trying to play resource : " + resourceUrl
     media = instance.media_new(resourceUrl)
     player.set_media(media)
     player.play()
     player.audio_set_volume(100)
+    print "[on_media_play] upper init volume"
+
 
 def on_stop():
     print "[on_stop]"
     global player
 
     if player != None:
-        print "Stop music"
+        print "[on_stop] Stop music"
         player.stop()
 
 def on_message(client, userdata, message):
@@ -122,8 +124,8 @@ def on_message(client, userdata, message):
         if msgJson["siteId"] != siteId:
             return
 
-    print "[Topic]: " + str(topic)
-    print "[Payload]: " + msg
+    # print "[Topic]: " + str(topic)
+    # print "[Payload]: " + msg
 
     if topic == "hermes/artifice/volume/set":
         on_sat_volume(volume=msgJson["volume"])
