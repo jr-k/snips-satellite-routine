@@ -15,7 +15,10 @@ SNIPS_CONFIG_PATH = '/etc/snips.toml'
 siteId = 'default'
 mqttServer = '127.0.0.1'
 mqttPort = 1883
-
+instance = None
+player = None
+mixer = alsaaudio.Mixer("PCM")
+mixer.setvolume(95)
 
 def loadConfigs():
 	global mqttServer, mqttPort, siteId, hotwordId
@@ -40,37 +43,39 @@ def loadConfigs():
 	else:
 		print('Snips configs not found')
 
-def on_sat_volume(volume):
-    print("[on_sat_volume] volume " + str(volume))
+def to_linear_volume(volume):
+    if volume == 0:    volume = 0
+    elif volume == 44:  volume = 1
+    elif volume == 60:  volume = 2
+    elif volume == 71:  volume = 3
+    elif volume == 78:  volume = 4
+    elif volume == 85:  volume = 5
+    elif volume == 88:  volume = 6
+    elif volume == 91:  volume = 7
+    elif volume == 95:  volume = 8
+    elif volume == 98:  volume = 9
+    elif volume == 100: volume = 10
+    return volume
 
-    if volume == 0:
-        volume = 0
-    elif volume == 1:
-        volume = 44
-    elif volume == 2:
-        volume = 60
-    elif volume == 3:
-        volume = 71
-    elif volume == 4:
-        volume = 78
-    elif volume == 5:
-        volume = 85
-    elif volume == 6:
-        volume = 88
-    elif volume == 7:
-        volume = 91
-    elif volume == 8:
-        volume = 95
-    elif volume == 9:
-        volume = 98
-    elif volume == 10:
-        volume = 100
+def to_alsa_volume(volume):
+    if volume == 0:    volume = 0
+    elif volume == 1:  volume = 44
+    elif volume == 2:  volume = 60
+    elif volume == 3:  volume = 71
+    elif volume == 4:  volume = 78
+    elif volume == 5:  volume = 85
+    elif volume == 6:  volume = 88
+    elif volume == 7:  volume = 91
+    elif volume == 8:  volume = 95
+    elif volume == 9:  volume = 98
+    elif volume == 10: volume = 100
+    return volume
+
+def on_sat_volume(volume):
+    print("[on_sat_volume] volume Linear:" + str(volume)+ " Log:"+str(to_alsa_volume(volume)))
 
     mixer = alsaaudio.Mixer("PCM")
-    mixer.setvolume(volume)
-
-instance = None
-player = None
+    mixer.setvolume(to_alsa_volume(volume))
 
 def on_hotword_on():
     print "[on_hotword_on]"
@@ -102,10 +107,8 @@ def on_media_play(resourceName, port):
     print "[on_media_play] Trying to play resource : " + resourceUrl
     media = instance.media_new(resourceUrl)
     player.set_media(media)
-    player.play()
     player.audio_set_volume(100)
-    print "[on_media_play] upper init volume"
-
+    player.play()
 
 def on_stop():
     print "[on_stop]"
@@ -145,14 +148,15 @@ def on_message(client, userdata, message):
 # def on_disconnected(client, userdata, rc):
 #     print("disconnected")
 #
-# def on_log(client, userdata, level, buf):
-#     print("log: ",buf)
+def on_log(client, userdata, level, buf):
+    if level != 16:
+        print("log: ", buf)
 
 loadConfigs()
 tmpClient = paho.Client("snips-satellite-routine-" + str(int(round(time.time() * 1000))))
 tmpClient.on_message=on_message
 # tmpClient.on_connect=on_connect
-# tmpClient.on_log=on_log
+tmpClient.on_log=on_log
 tmpClient.connect(mqttServer, mqttPort)
 tmpClient.subscribe("hermes/hotword/default/detected")
 tmpClient.subscribe("hermes/asr/stopListening")
