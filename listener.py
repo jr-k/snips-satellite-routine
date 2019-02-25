@@ -134,7 +134,7 @@ def on_message(client, userdata, message):
         on_sat_volume(volume=msgJson["volume"])
     elif topic == "hermes/artifice/media/audio/play":
         on_media_play(resourceName=msgJson["media"], port=msgJson["port"])
-    elif topic == "hermes/artifice/stop":
+    elif topic == "hermes/artifice/stopAsked":
         on_stop()
     elif topic == "hermes/hotword/default/detected":
         on_hotword_on()
@@ -162,5 +162,5 @@ tmpClient.subscribe("hermes/hotword/default/detected")
 tmpClient.subscribe("hermes/asr/stopListening")
 tmpClient.subscribe("hermes/artifice/volume/set")
 tmpClient.subscribe("hermes/artifice/media/audio/play")
-tmpClient.subscribe("hermes/artifice/stop")
+tmpClient.subscribe("hermes/artifice/stopAsked")
 tmpClient.loop_forever()
